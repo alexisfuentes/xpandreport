@@ -4,8 +4,9 @@
 */
 
 require_once "parserxr.php";
+require_once "../vendor/autoload.php";
 
-class XpandReport
+class XpandReport extends FPDF
 {
 	// Estructura del reporte ( Componentes estaticos y dinamicos )
 	protected $_reportStruct;
@@ -22,8 +23,19 @@ class XpandReport
 			echo $e;
 		}
 
-		// Obtener los parametros a reemplazar;
+		// Obtener los parametros a reemplazar
 		$this->_strParams = $this->_reportStruct->getParams();
+
+		// Obtener las propiedades del reporte
+		$props = $this->_reportStruct->getReportProperties();
+		parent::__construct($props->layout[0], 'mm', $props->papersize);
+
+		// Obtener los margenes del reporte y asignarlos al PDF
+		$margins = $this->_reportStruct->getMarginsReport();
+		$this->SetMargins($margins->left, $margins->top, $margins->right);
+
+		// Agregar el autor del reporte
+		$this->SetAuthor($props->author);
 	}
 
 	/**
@@ -52,6 +64,16 @@ class XpandReport
 	public function setParams($paramsArray)
 	{
 		$this->_params = $paramsArray;
+	}
+
+	/**
+	 * Crear el reporte con todos los componentes estaticos y dinamicos.
+	 */
+	public function Run(){
+		$this->AddPage();
+		$this->SetFont('Arial');
+		$this->Cell(0,10,'Enjoy new fonts with FPDF!');
+		$this->Output();
 	}
 
 	public function Demo()

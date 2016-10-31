@@ -38,7 +38,7 @@ class ParserXR
 	public function getReportProperties(){
 		$props = array();
 		foreach ($this->_xml->attributes() as $name => $value)
-			$props[$name] = (string)$value;
+			$props[$name] = strtolower((string)$value);
 
 		return (object)$props;
 	}
