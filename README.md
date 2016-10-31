@@ -1,0 +1,1 @@
+Wrapper para reportes creados con XpandReport C# de escritorio, el cual pasara los reportes a PDF en PHP Web
