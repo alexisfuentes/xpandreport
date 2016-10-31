@@ -7,8 +7,11 @@ require_once "parserxr.php";
 
 class XpandReport
 {
+	// Estructura del reporte ( Componentes estaticos y dinamicos )
 	protected $_reportStruct;
+	// Parametros ha reemplazar dentro del reporte
 	protected $_params;
+	// Cadenas de parametros obtenidas del reporte.
 	protected $_strParams;
 
 	public function __construct($file)
@@ -17,7 +20,6 @@ class XpandReport
 			$this->_reportStruct = new ParserXR($file);
 		} catch (Exception $e) {
 			echo $e;
-			exit();
 		}
 
 		// Obtener los parametros a reemplazar;
@@ -54,6 +56,7 @@ class XpandReport
 
 	public function Demo()
 	{
+		echo "<pre>";
 		$prop = $this->_reportStruct->getDynamicNodes();
 		print_r($prop);
 	}
