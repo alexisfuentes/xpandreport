@@ -8,8 +8,8 @@
   </parameters>
   <content>
     <staticContent>
-      <textField x="69" y="69" width="100" height="100" horAlignment="None" verAlignment="None" Selectable="True" ObjectRepeatability="RepeatOnAllPages" NameId="@{id}">
-        <text horAlignment="Left" verAlignment="Top">Sample text</text>
+      <textField x="69" y="69" width="100" height="100" horAlignment="None" verAlignment="None" Selectable="True" ObjectRepeatability="RepeatOnAllPages" NameId="txtPrimero">
+        <text horAlignment="Left" verAlignment="Top">Contenido del cuadro de texto estatico</text>
         <font family="Tahoma" size="10" style="Regular" />
         <foregroundColor color="Black" />
         <backgroundColor color="Transparent" />
@@ -35,6 +35,13 @@
           <column name="clSex" label="Sexo" width="80" align="Left" formatMask="" calculateTotal="False" visible="True" />
         </columns>
       </table>
+      <textField x="350" y="93" width="100" height="100" horAlignment="None" verAlignment="None" Selectable="True" ObjectRepeatability="RepeatOnAllPages" NameId="txtOtro">
+        <text horAlignment="Left" verAlignment="Top">Nuevo contenido dos</text>
+        <font family="Tahoma" size="10" style="Regular" />
+        <foregroundColor color="Black" />
+        <backgroundColor color="Transparent" />
+        <border width="1" color="Black" />
+      </textField>
     </staticContent>
     <dynamicContent>
       <textField x="76" y="353" width="200" height="25" horAlignment="None" verAlignment="None" Selectable="True" ObjectRepeatability="RepeatOnAllPages" NameId="@{id}">
@@ -60,6 +67,13 @@
       </table>
       <textField x="595" y="1022" width="200" height="25" horAlignment="None" verAlignment="None" Selectable="True" ObjectRepeatability="RepeatOnAllPages" NameId="Text">
         <text horAlignment="Left" verAlignment="Top">$P{pageNumber}</text>
+        <font family="Tahoma" size="10" style="Regular" />
+        <foregroundColor color="Black" />
+        <backgroundColor color="Transparent" />
+        <border width="1" color="Black" />
+      </textField>
+      <textField x="78" y="296" width="200" height="25" horAlignment="None" verAlignment="None" Selectable="True" ObjectRepeatability="RepeatOnAllPages" NameId="Text">
+        <text horAlignment="Left" verAlignment="Top">$P{dtParam}</text>
         <font family="Tahoma" size="10" style="Regular" />
         <foregroundColor color="Black" />
         <backgroundColor color="Transparent" />

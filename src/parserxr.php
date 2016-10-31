@@ -1,7 +1,9 @@
 <?php 
 
 /**
-* Clase para 
+* Clase para reconocer y obtener los elementos que se integraron en el 
+* reporte y convertirlos en entidades de PHP para reconocerlos y 
+* crear el reporte en PDF
 */
 class ParserXR
 {
@@ -18,6 +20,11 @@ class ParserXR
 			throw new Exception("ParserXR: File not found!", 1);
 		
 		$this->_xml = simplexml_load_file($file);
+
+		// Obtener nodos estaticos
+		$this->xStaticNodes();
+		// Obtener nodos dinamicos
+		$this->xDynamicNodes();
 	}
 
 	/**
@@ -65,7 +72,9 @@ class ParserXR
 		return $params;
 	}
 
-	/***/
+	/**
+	 * Obtiene los componentes que son estaticos dentro del reporte
+	 */
 	private function xStaticNodes()
 	{
 		foreach ($this->_xml->content->staticContent->children() as $nodo) {
@@ -87,7 +96,6 @@ class ParserXR
 												'content' => (string)$nodo->text,
 												'attr' => $at
 											);
-							// print_r($nodo);
 						}else{
 							foreach ($propiedades->attributes() as $name => $value)
 								$at[$name] = (string)$value;
@@ -123,7 +131,7 @@ class ParserXR
 												'content' => base64_decode((string)$nodo->image)
 											);
 						}else{
-							foreach ($propiedades as $name => $value)
+							foreach ($propiedades->attributes() as $name => $value)
 								$at[$name] = (string)$value;
 
 							$prop[$propiedades->getName()] = array(
@@ -144,9 +152,84 @@ class ParserXR
 		}
 	}
 
+	/**
+	 * Obtiene los componentes dinamicos dentro del reporte
+	 */
+	private function xDynamicNodes()
+	{
+		foreach ($this->_xml->content->dynamicContent->children() as $nodo) {
+			$attr = array();
+			$prop = array();
+			switch ($nodo->getName()) {
+				case 'textField':
+					// Obtener los atributos
+					foreach ($nodo->attributes() as $name => $value)
+						$attr[$name] = (string)$value;
+
+					foreach ($nodo->children() as $propiedades) {
+						$at = array();
+						if ($propiedades->getName() == 'text'){
+							foreach ($propiedades->attributes() as $name => $value)
+								$at[$name] = (string)$value;
+
+							$prop['text'] = array(
+												'content' => (string)$nodo->text,
+												'attr' => $at
+											);
+						}else{
+							foreach ($propiedades->attributes() as $name => $value)
+								$at[$name] = (string)$value;
+							$prop[$propiedades->getName()] = array(
+																"attr" => $at
+															);
+						}
+					}
+
+					$this->_dynamicNodes[$nodo->getName()][] = array(
+																'attr' => $attr,
+																'prop' => $prop
+															);
+					break;
+				case 'pictureBox':
+					// Obtener los atributos
+					foreach ($nodo->attributes() as $name => $value)
+						$attr[$name] = (string)$value;
+
+					foreach ($nodo->children() as $propiedades) {
+						$at = array();
+						if ($propiedades->getName() == 'image') {
+							$prop['image'] = array(
+												'content' => base64_decode((string)$nodo->image)
+											);
+						}else{
+							foreach ($propiedades->attributes() as $name => $value)
+								$at[$name] = (string)$value;
+
+							$prop[$propiedades->getName()] = array(
+																'attr' => $at
+															);
+						}
+					}
+
+					$this->_dynamicNodes[$nodo->getName()][] = array(
+																	'attr' => $attr,
+																	'prop' => $prop
+																);
+					break;
+				case 'table':
+					// Obtener los atributos
+					break;
+			}
+		}
+	}
+
 	public function getStaticNodes(){
-		$this->xStaticNodes();
 		return $this->_staticNodes;
+	}
+
+	public function getDynamicNodes()
+	{
+		return $this->_dynamicNodes;
 	}
 
 }
