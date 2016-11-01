@@ -38,6 +38,11 @@ class XpandReport extends FPDF
 		$this->SetAuthor($props->author);
 	}
 
+	private function MsgError($text)
+	{
+		throw new Exception("XpandReport: " . $text, 1);
+	}
+
 	/**
 	 * Buscamos todos los parametros dentro de la cadena y los reemplazamos
 	 * con los valores pasados para el reporte
@@ -55,6 +60,21 @@ class XpandReport extends FPDF
 		}
 
 		return $param;
+	}
+
+	private function drawStaticNodes(){
+		$statics = $this->_reportStruct->getStaticNodes();
+		foreach ($statics as $name => $com) {
+			switch ($name) {
+				case 'textField':
+					
+					break;
+				
+				default:
+					# code...
+					break;
+			}
+		}
 	}
 
 	/**
