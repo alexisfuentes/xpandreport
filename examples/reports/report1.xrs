@@ -9,7 +9,7 @@
   <content>
     <staticContent>
       <textField x="124" y="122" width="100" height="100" horAlignment="None" verAlignment="None" Selectable="True" ObjectRepeatability="RepeatOnAllPages" NameId="txtPrimero">
-        <text horAlignment="Left" verAlignment="Top">Daniela Zacarias</text>
+        <text horAlignment="Left" verAlignment="Top">D2Z</text>
         <font family="Tahoma" size="10" style="Regular" />
         <foregroundColor color="Black" />
         <backgroundColor color="Transparent" />
