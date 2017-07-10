@@ -28,7 +28,7 @@ class XpandReport extends FPDF
 
 		// Obtener las propiedades del reporte
 		$props = $this->_reportStruct->getReportProperties();
-		parent::__construct($props->layout[0], 'mm', $props->papersize);
+		parent::__construct($props->layout[0], 'pt', $props->papersize);
 
 		// Obtener los margenes del reporte y asignarlos al PDF
 		$margins = $this->_reportStruct->getMarginsReport();
@@ -67,7 +67,32 @@ class XpandReport extends FPDF
 		foreach ($statics as $name => $com) {
 			switch ($name) {
 				case 'textField':
-					
+					foreach ($com as $txt) {
+						$x = $txt['attr']['x'] - ($txt['attr']['x'] * .28);
+						$y = $txt['attr']['y'] - ($txt['attr']['y'] * .2754);
+						$this->SetXY($x, $y);
+						$this->Cell($txt['attr']['width'], $txt['attr']['height'], $txt['prop']['text']['content']);
+					}
+					break;
+				
+				default:
+					# code...
+					break;
+			}
+		}
+	}
+
+	private function drawDynamicNodes(){
+		$statics = $this->_reportStruct->getDynamicNodes();
+		foreach ($statics as $name => $com) {
+			switch ($name) {
+				case 'textField':
+					foreach ($com as $txt) {
+						$x = $txt['attr']['x'] - ($txt['']['x'] * .28);
+						$y = $txt['attr']['y'] - ($txt['attr']['y'] * .2754);
+						$this->SetXY($x, $y);
+						$this->Cell($txt['attr']['width'], $txt['attr']['height'], $txt['prop']['text']['content']);
+					}
 					break;
 				
 				default:
@@ -92,14 +117,17 @@ class XpandReport extends FPDF
 	public function Run(){
 		$this->AddPage();
 		$this->SetFont('Arial');
-		$this->Cell(0,10,'Enjoy new fonts with FPDF!');
+		// Agregar nodos estaticos
+		$this->drawStaticNodes();
+		// Agregar nodos dinamicos
+		$this->drawDynamicNodes();
 		$this->Output();
 	}
 
 	public function Demo()
 	{
 		echo "<pre>";
-		$prop = $this->_reportStruct->getDynamicNodes();
+		$prop = $this->_reportStruct->getStaticNodes();
 		print_r($prop);
 	}
 }
