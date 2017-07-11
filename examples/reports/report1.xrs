@@ -42,6 +42,7 @@
         <backgroundColor color="Transparent" />
         <border width="1" color="Black" />
       </textField>
+      <line x="23" y="1045" height="1" width="804" lineColor="Black" Selectable="True" ObjectRepeatability="RepeatOnAllPages" />
     </staticContent>
     <dynamicContent>
       <textField x="613" y="295" width="200" height="25" horAlignment="None" verAlignment="None" Selectable="True" ObjectRepeatability="RepeatOnAllPages" NameId="@{id}">
