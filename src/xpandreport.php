@@ -43,22 +43,50 @@ class XpandReport extends FPDF
 		throw new Exception("XpandReport: " . $text, 1);
 	}
 
+	private function paramGlobal($param)
+	{
+		$globasStr = array(
+						'systemTime' => date("h:i:s A"),
+						'systemDate' => date("d/m/Y")
+					);
+		if (array_key_exists($param, $globasStr)) {
+			return $globasStr[$param];
+		}
+		return "";
+	}
+
+	private function findArrayParams()
+	{
+		$listParams = array();
+		for ($i=0; $i < count($this->_strParams); $i++) { 
+			$listParams[$this->_strParams[$i]['name']] = array(
+															"type" => $this->_strParams[$i]['type']
+														);
+		}
+		return $listParams;
+	}
+
 	/**
 	 * Buscamos todos los parametros dentro de la cadena y los reemplazamos
 	 * con los valores pasados para el reporte
 	 * @param  string $param Cadena con el parametro a reemplazar.
 	 * @return string        Cadena con los valores reemplazados.
 	 */
-	private function resolveParams($param){
-		while(stristr($param, '$P', true)) {
+	protected function resolveParams($param){
+		$paramsExist = $this->findArrayParams();
+		// Verificar si tiene el formato para reemplazar la cadena
+		if(stripos($param, '$P') !== FALSE) {
 			if (preg_match('/\$P\{([a-zA-Z0-9]*)\}/', $param, $str)){
-				if (array_key_exists($str[1], $this->_params))
-					$param = str_replace($str[0], $this->_params[$str[1]], $param);
-				else
-					$param = str_replace($str[0], '', $param);
+				if (array_key_exists($str[1], $paramsExist)){
+					if (array_key_exists($str[1], $this->_params))
+						$param = str_replace($str[0], $this->_params[$str[1]], $param);
+					else
+						$param = str_replace($str[0], '', $param);
+				}else{
+					$param = $this->paramGlobal($str[1]);
+				}
 			}
 		}
-
 		return $param;
 	}
 
@@ -71,10 +99,25 @@ class XpandReport extends FPDF
 						$x = $txt['attr']['x'] - ($txt['attr']['x'] * .28);
 						$y = $txt['attr']['y'] - ($txt['attr']['y'] * .2754);
 						$this->SetXY($x, $y);
-						$this->Cell($txt['attr']['width'], $txt['attr']['height'], $txt['prop']['text']['content']);
+						$this->Cell($txt['attr']['width'], 
+									$txt['attr']['height'], 
+									$txt['prop']['text']['content']);
 					}
 					break;
-				
+				case 'pictureBox':
+
+					break;
+				case 'line':
+					foreach ($com as $line) {
+						$x1 = $line['attr']['x'] - ($line['attr']['x'] * .28);
+						$y1 = $line['attr']['y'] - ($line['attr']['y'] * .2754);
+
+						$x2 = ($line['attr']['x'] + $line['attr']['width']) - (($line['attr']['x'] + $line['attr']['width']) * .2754);
+						$y2 = $line['attr']['y'] - ($line['attr']['y'] * .2754);
+						$this->SetXY($x, $y);
+						$this->Line($x1, $y1, $x2, $y2);
+					}
+					break;
 				default:
 					# code...
 					break;
@@ -88,10 +131,14 @@ class XpandReport extends FPDF
 			switch ($name) {
 				case 'textField':
 					foreach ($com as $txt) {
-						$x = $txt['attr']['x'] - ($txt['']['x'] * .28);
+						$x = $txt['attr']['x'] - ($txt['attr']['x'] * .28);
 						$y = $txt['attr']['y'] - ($txt['attr']['y'] * .2754);
 						$this->SetXY($x, $y);
-						$this->Cell($txt['attr']['width'], $txt['attr']['height'], $txt['prop']['text']['content']);
+						$this->Cell($txt['attr']['width'], 
+									$txt['attr']['height'], 
+									$this->resolveParams(
+										$txt['prop']['text']['content']
+									));
 					}
 					break;
 				
