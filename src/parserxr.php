@@ -218,6 +218,45 @@ class ParserXR
 					break;
 				case 'table':
 					// Obtener los atributos
+					foreach ($nodo->attributes() as $name => $value)
+						$attr[$name] = (string)$value;
+
+					foreach ($nodo->children() as $propiedades) {
+						$at = array();
+						foreach ($propiedades->attributes() as $name => $value)
+							$at[$name] = (string)$value;
+
+						if ($propiedades->getName() == 'header' || $propiedades->getName() == 'dataRows') {
+							$hat = array();
+							foreach ($propiedades->font->attributes() as $name => $value)
+								$hat[$name] = (string)$value;
+
+							$prop[$propiedades->getName()] = array(
+																'attr' => $at,
+																'font' => array('attr' => $hat)
+															);
+						}elseif ($propiedades->getName() == 'columns'){
+							// Obtener los datos de las columnas
+							$columns = array();
+							foreach ($propiedades->children() as $column) {
+								$c = array();
+								foreach ($column->attributes() as $name => $value)
+									$c[$name] = (string)$value;
+								$columns[] = $c;
+							}
+							$prop[$propiedades->getName()] = array(
+																'attr' => $at,
+																'columns' => $columns
+															);
+						}else{
+							$prop[$propiedades->getName()] = array('attr' => $at);
+						}
+					}
+
+					$this->_dynamicNodes[$nodo->getName()][] = array(
+																	'attr' => $attr,
+																	'prop' => $prop
+																);
 					break;
 			}
 		}

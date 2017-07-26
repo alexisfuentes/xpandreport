@@ -1,3 +1,4 @@
 vendor
 .phpintel
 composer.lock
+examples/reports/report1.pdf

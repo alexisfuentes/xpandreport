@@ -2,7 +2,7 @@
 /**
 * Clase wrapper para xpandreport y fpdf
 */
-
+// define('FPDF_FONTPATH', '../src/fonts');
 require_once "parserxr.php";
 require_once "../vendor/autoload.php";
 
@@ -14,6 +14,8 @@ class XpandReport extends FPDF
 	protected $_params;
 	// Cadenas de parametros obtenidas del reporte.
 	protected $_strParams;
+	// Contenedor de las tablas que se usaran en el reporte
+	protected $_hTables;
 
 	public function __construct($file)
 	{
@@ -36,6 +38,7 @@ class XpandReport extends FPDF
 
 		// Agregar el autor del reporte
 		$this->SetAuthor($props->author);
+		$this->_hTables = array();
 	}
 
 	private function MsgError($text)
@@ -47,7 +50,8 @@ class XpandReport extends FPDF
 	{
 		$globasStr = array(
 						'systemTime' => date("h:i:s A"),
-						'systemDate' => date("d/m/Y")
+						'systemDate' => date("d/m/Y"),
+						'pageNumber' => $this->PageNo()
 					);
 		if (array_key_exists($param, $globasStr)) {
 			return $globasStr[$param];
@@ -90,18 +94,48 @@ class XpandReport extends FPDF
 		return $param;
 	}
 
+	protected function resolveStyleText($param){
+		return "";
+		if ($param == 'regular')
+			return '';
+
+		return ($param == 'bold') ? 'B' : 'I';
+
+	}
+
+	protected function resolveDataTable($nameTable, $w, $h, $x, $y){
+		// Obtener los datos de la tabla a agregar
+		$rows = $this->_hTables[$nameTable];
+		foreach ($rows as $row) {
+			$i = 0;
+			$y = $y + $h;
+			$this->SetXY($x, $y);
+			foreach ($row as $c){
+				$this->Cell($w[$i], $h, $c, 1);
+				$i++;
+			}
+			$this->Ln();
+		}
+	}
+
 	private function drawStaticNodes(){
 		$statics = $this->_reportStruct->getStaticNodes();
 		foreach ($statics as $name => $com) {
 			switch ($name) {
 				case 'textField':
 					foreach ($com as $txt) {
+						/*$this->SetFont(
+								$txt['prop']['font']['attr']['family'],
+								$this->resolveStyleText($txt['prop']['font']['attr']['style']),
+								$txt['prop']['font']['attr']['size']
+							);*/
 						$x = $txt['attr']['x'] - ($txt['attr']['x'] * .28);
 						$y = $txt['attr']['y'] - ($txt['attr']['y'] * .2754);
 						$this->SetXY($x, $y);
 						$this->Cell($txt['attr']['width'], 
 									$txt['attr']['height'], 
 									$txt['prop']['text']['content']);
+						$this->SetFont('Arial', '', 10);
 					}
 					break;
 				case 'pictureBox':
@@ -133,6 +167,7 @@ class XpandReport extends FPDF
 					foreach ($com as $txt) {
 						$x = $txt['attr']['x'] - ($txt['attr']['x'] * .28);
 						$y = $txt['attr']['y'] - ($txt['attr']['y'] * .2754);
+						// $y -= 56.7; // 56.7
 						$this->SetXY($x, $y);
 						$this->Cell($txt['attr']['width'], 
 									$txt['attr']['height'], 
@@ -141,7 +176,24 @@ class XpandReport extends FPDF
 									));
 					}
 					break;
-				
+				case 'table':
+					foreach ($com as $table) {
+						$x = $table['attr']['x'] - ($table['attr']['x'] * .28);
+						$y = $table['attr']['y'] - ($table['attr']['y'] * .2754);
+						$this->SetXY($x, $y);
+						// Crear las celdas que funcionaran como titulo de la columna
+						$wArray = array();
+						$h = 0;
+						foreach ($table['prop']['columns']['columns'] as $cell) {
+							$w = $cell['width'] - ($cell['width'] * .28);
+							$h = $table['attr']['cellHeight'] - ($table['attr']['cellHeight'] * .28);
+							$this->Cell($w, $h, $cell['label'], 1);
+							$wArray[] = $w;
+						}
+						$this->Ln();
+						// Agregar los datos segun el nombre de la tabla
+						$this->resolveDataTable($table['attr']['dataSource'], $wArray, $h, $x, $y);
+					}
 				default:
 					# code...
 					break;
@@ -159,11 +211,26 @@ class XpandReport extends FPDF
 	}
 
 	/**
+	 * Pasar los valores de las tablas para el reporte
+	 * @param String $nameTable Nombre de la tabla donde se reemplazaran los datos
+	 * @param Array $values    Datos de la tabla
+	 */
+	public function setTable($nameTable, $values)
+	{
+		if ($nameTable == "")
+			throw new Exception("No se encontraron datos para la creación de la tabla", 1);
+
+		$this->_hTables[$nameTable] = $values;
+	}
+
+	/**
 	 * Crear el reporte con todos los componentes estaticos y dinamicos.
 	 */
 	public function Run(){
 		$this->AddPage();
-		$this->SetFont('Arial');
+		$this->SetFont('Arial', '', 10);
+		$this->SetAutoPageBreak(false);
+		$this->AliasNbPages();
 		// Agregar nodos estaticos
 		$this->drawStaticNodes();
 		// Agregar nodos dinamicos
@@ -174,7 +241,7 @@ class XpandReport extends FPDF
 	public function Demo()
 	{
 		echo "<pre>";
-		$prop = $this->_reportStruct->getStaticNodes();
+		$prop = $this->_reportStruct->getDynamicNodes();
 		print_r($prop);
 	}
 }
