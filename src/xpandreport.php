@@ -16,6 +16,7 @@ class XpandReport extends FPDF
 	protected $_strParams;
 	// Contenedor de las tablas que se usaran en el reporte
 	protected $_hTables;
+	// Variable para tomar el ultimo componente de la parte inferior del documento
 
 	public function __construct($file)
 	{
@@ -112,10 +113,21 @@ class XpandReport extends FPDF
 		foreach ($rows as $row) {
 			$i = 0;
 			$y = $y + $h;
-			$this->SetXY($x, $y);
-			foreach ($row as $c){
-				$this->Cell($w[$i], $h, $c, 1);
-				$i++;
+			// Checar si ya estan cerca del margen para poder realizar el salto de página
+			if ($this->h - 28.35/$this->k > $y){
+				$this->SetXY($x, $y);
+				foreach ($row as $c){
+					$this->Cell($w[$i], $h, $c, 1);
+					$i++;
+				}
+			}else{
+				$this->AddPage();
+				$y = 28.35 / $this->k;
+				$this->SetXY($x, $y);
+				foreach ($row as $c) {
+					$this->Cell($w[$i], $h, $c, 1);
+					$i++;
+				}
 			}
 			$this->Ln();
 		}
@@ -151,7 +163,7 @@ class XpandReport extends FPDF
 
 						$x2 = ($line['attr']['x'] + $line['attr']['width']) - (($line['attr']['x'] + $line['attr']['width']) * .2754);
 						$y2 = $line['attr']['y'] - ($line['attr']['y'] * .2754);
-						$this->SetXY($x, $y);
+						$this->SetXY($x1, $y1);
 						$this->Line($x1, $y1, $x2, $y2);
 					}
 					break;
