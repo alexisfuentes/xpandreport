@@ -80,18 +80,21 @@ class XpandReport extends FPDF
 		$paramsExist = $this->findArrayParams();
 		// Verificar si tiene el formato para reemplazar la cadena
 		if(stripos($param, '$P') !== FALSE) {
-			if (preg_match('/\$P\{([a-zA-Z0-9]*)\}/', $param, $str)){
-				if (array_key_exists($str[1], $paramsExist)){
-					if (array_key_exists($str[1], $this->_params))
-						$param = str_replace($str[0], $this->_params[$str[1]], $param);
-					else
-						$param = str_replace($str[0], '', $param);
-				}else{
-					$param = $this->paramGlobal($str[1]);
+			if (preg_match_all('/\$P\{([a-zA-Z0-9]*)\}/', $param, $str, PREG_SET_ORDER)){
+				foreach ($str as $p) {
+					if (array_key_exists($p[1], $paramsExist)){
+						if (array_key_exists($p[1], $this->_params))
+							$param = str_replace($p[0], $this->_params[$p[1]], $param);
+						else
+							$param = str_replace($p[0], '', $param);
+					}else{
+						$param = str_replace($p[0], $this->paramGlobal($p[1]), $param);
+					}
 				}
+
 			}
 		}
-		return $param;
+		return utf8_decode($param);
 	}
 
 	protected function resolveStyleText($param){

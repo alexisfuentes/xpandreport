@@ -82,7 +82,7 @@
         </columns>
       </table>
       <textField x="630" y="1055" width="200" height="25" horAlignment="Right" verAlignment="Bottom" Selectable="True" ObjectRepeatability="RepeatOnAllPages" NameId="Text">
-        <text horAlignment="Left" verAlignment="Top">Página $P{pageNumber}</text>
+        <text horAlignment="Left" verAlignment="Top">Página $P{pageNumber} de $P{pageNumber}</text>
         <font family="Tahoma" size="10" style="Regular" />
         <foregroundColor color="Black" />
         <backgroundColor color="Transparent" />
