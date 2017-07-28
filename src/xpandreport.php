@@ -16,6 +16,8 @@ class XpandReport extends FPDF
 	protected $_strParams;
 	// Contenedor de las tablas que se usaran en el reporte
 	protected $_hTables;
+	// Objetos que se repetiran a lo largo del reporte
+	protected $_objsRepeat;
 	// Variable para tomar el ultimo componente de la parte inferior del documento
 
 	public function __construct($file)
@@ -40,6 +42,7 @@ class XpandReport extends FPDF
 		// Agregar el autor del reporte
 		$this->SetAuthor($props->author);
 		$this->_hTables = array();
+		$this->_objsRepeat = array();
 	}
 
 	private function MsgError($text)
@@ -133,6 +136,37 @@ class XpandReport extends FPDF
 		}
 	}
 
+	/**
+	 * Asignar todos los componentes que se repetiran en las hojas.
+	 * @param  Object $component Array con los datos del componente que se repetira
+	 */
+	protected function repeatComponent($component)
+	{
+		$this->_objsRepeat[] = $component;
+	}
+
+	/**
+	 * Pinta los objectos que se repiten en las páginas.
+	 */
+	protected function paintRepeatObjs()
+	{
+		// Recorrer el arreglo de componentes y pintarlos segun sus necesidades
+		foreach ($this->_objsRepeat as $component) {
+			switch ($component['name']) {
+				case 'textField':
+					
+					break;
+				case 'pictureBox':
+					break;
+				case 'line':
+					break;
+				default:
+					# code...
+					break;
+			}
+		}
+	}
+
 	private function drawStaticNodes(){
 		$statics = $this->_reportStruct->getStaticNodes();
 		foreach ($statics as $name => $com) {
@@ -154,7 +188,26 @@ class XpandReport extends FPDF
 					}
 					break;
 				case 'pictureBox':
-
+					foreach ($com as $imgs) {
+						$x = $imgs['attr']['x'] - ($imgs['attr']['x'] * .28);
+						$y = $imgs['attr']['y'] - ($imgs['attr']['y'] * .2754);
+						$w = $imgs['attr']['width'] - ($imgs['attr']['width'] * .28);
+						$h = $imgs['attr']['height'] - ($imgs['attr']['height'] * .28);
+						$dynamic = ($imgs['attr']['Dynamic'] == "True");
+						if ($dynamic) {
+							// Cargar imagen de la lista de imagenes pasadas.
+							foreach ($images as $i)
+								$this->Image($i, $x, $y, $w, $h);
+						}else{
+							$carpeta = 'temp';
+							if (!file_exists($carpeta))
+								mkdir($carpeta, 0777, true);
+							file_put_contents('temp/img.png', $imgs['prop']['image']['content']);
+							$dirImg = "temp/img.png";
+							$this->Image($dirImg, $x, $y, $w, $h);
+							unlink($dirImg);
+						}
+					}
 					break;
 				case 'line':
 					foreach ($com as $line) {
@@ -256,7 +309,7 @@ class XpandReport extends FPDF
 	public function Demo()
 	{
 		echo "<pre>";
-		$prop = $this->_reportStruct->getDynamicNodes();
+		$prop = $this->_reportStruct->getStaticNodes();
 		print_r($prop);
 	}
 }
