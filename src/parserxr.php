@@ -62,6 +62,9 @@ class ParserXR
 	 */
 	public function getParams(){
 		$params = array();
+		if (count($this->_xml->parameters->parameter) == 0)
+			return $params;
+
 		foreach ($this->_xml->parameters->parameter as $param) {
 			$dataParam = array();
 			foreach ($param->attributes() as $name => $value)

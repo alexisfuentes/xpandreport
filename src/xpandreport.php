@@ -18,6 +18,8 @@ class XpandReport extends FPDF
 	protected $_hTables;
 	// Objetos que se repetiran a lo largo del reporte
 	protected $_objsRepeat;
+	// Array con las imagenes que se cargaran de forma dinamica
+	protected $_listImgs;
 	// Variable para tomar el ultimo componente de la parte inferior del documento
 
 	public function __construct($file)
@@ -55,11 +57,11 @@ class XpandReport extends FPDF
 		$globasStr = array(
 						'systemTime' => date("h:i:s A"),
 						'systemDate' => date("d/m/Y"),
-						'pageNumber' => $this->PageNo()
+						'pageNumber' => $this->PageNo(),
+						'totalPages' => '{nb}'
 					);
-		if (array_key_exists($param, $globasStr)) {
+		if (array_key_exists($param, $globasStr) && $param != "")
 			return $globasStr[$param];
-		}
 		return "";
 	}
 
@@ -91,9 +93,8 @@ class XpandReport extends FPDF
 							$param = str_replace($p[0], $this->_params[$p[1]], $param);
 						else
 							$param = str_replace($p[0], '', $param);
-					}else{
+					}else
 						$param = str_replace($p[0], $this->paramGlobal($p[1]), $param);
-					}
 				}
 
 			}
@@ -107,11 +108,23 @@ class XpandReport extends FPDF
 			return '';
 
 		return ($param == 'bold') ? 'B' : 'I';
+	}
 
+	protected function resolveAlignment($param){
+		if ($param == 'Right')
+			return 'R';
+		elseif ($param == 'Center')
+			return 'C';
+
+		return '';
 	}
 
 	protected function resolveDataTable($nameTable, $w, $h, $x, $y){
 		// Obtener los datos de la tabla a agregar
+		// Verificar si se paso información de la tabla
+		if (!array_key_exists($nameTable, $this->_hTables))
+			return;
+
 		$rows = $this->_hTables[$nameTable];
 		foreach ($rows as $row) {
 			$i = 0;
@@ -178,12 +191,15 @@ class XpandReport extends FPDF
 								$this->resolveStyleText($txt['prop']['font']['attr']['style']),
 								$txt['prop']['font']['attr']['size']
 							);*/
+						$w = $txt['attr']['width'] - ($txt['attr']['width'] * .26);
+						$h = $txt['attr']['height'] - ($txt['attr']['height'] * .26);
 						$x = $txt['attr']['x'] - ($txt['attr']['x'] * .28);
 						$y = $txt['attr']['y'] - ($txt['attr']['y'] * .2754);
+						$border = (int)$txt['prop']['border']['attr']['width'];
+						$align = $this->resolveAlignment($txt['prop']['text']['attr']['horAlignment']);
 						$this->SetXY($x, $y);
-						$this->Cell($txt['attr']['width'], 
-									$txt['attr']['height'], 
-									$txt['prop']['text']['content']);
+						$this->Cell($w, $h, utf8_decode($txt['prop']['text']['content']),
+									$border, 0,	$align);
 						$this->SetFont('Arial', '', 10);
 					}
 					break;
@@ -202,8 +218,9 @@ class XpandReport extends FPDF
 							$carpeta = 'temp';
 							if (!file_exists($carpeta))
 								mkdir($carpeta, 0777, true);
-							file_put_contents('temp/img.png', $imgs['prop']['image']['content']);
-							$dirImg = "temp/img.png";
+							file_put_contents('temp/'. $imgs['attr']['Name'] .'.png', 
+								$imgs['prop']['image']['content']);
+							$dirImg = "temp/". $imgs['attr']['Name'] .".png";
 							$this->Image($dirImg, $x, $y, $w, $h);
 							unlink($dirImg);
 						}
@@ -286,7 +303,7 @@ class XpandReport extends FPDF
 	public function setTable($nameTable, $values)
 	{
 		if ($nameTable == "")
-			throw new Exception("No se encontraron datos para la creación de la tabla", 1);
+			$this->MsgError("No se encontraron datos para la creación de la tabla");
 
 		$this->_hTables[$nameTable] = $values;
 	}
