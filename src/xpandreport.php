@@ -1,10 +1,9 @@
-<?php 
+<?php
 /**
 * Clase wrapper para xpandreport y fpdf
 */
 // define('FPDF_FONTPATH', '../src/fonts');
 require_once "parserxr.php";
-require_once "../vendor/autoload.php";
 
 class XpandReport extends FPDF
 {
@@ -45,6 +44,9 @@ class XpandReport extends FPDF
 		$this->SetAuthor($props->author);
 		$this->_hTables = array();
 		$this->_objsRepeat = array();
+
+		$this->AddFont('Tahoma','','tahoma.php');
+		// $this->AddFont('Tahoma','B','tahomabd.php');
 	}
 
 	private function MsgError($text)
@@ -68,7 +70,7 @@ class XpandReport extends FPDF
 	private function findArrayParams()
 	{
 		$listParams = array();
-		for ($i=0; $i < count($this->_strParams); $i++) { 
+		for ($i=0; $i < count($this->_strParams); $i++) {
 			$listParams[$this->_strParams[$i]['name']] = array(
 															"type" => $this->_strParams[$i]['type']
 														);
@@ -103,11 +105,10 @@ class XpandReport extends FPDF
 	}
 
 	protected function resolveStyleText($param){
-		return "";
 		if ($param == 'regular')
 			return '';
 
-		return ($param == 'bold') ? 'B' : 'I';
+		return ($param == 'Bold') ? 'B' : '';
 	}
 
 	protected function resolveAlignment($param){
@@ -117,6 +118,17 @@ class XpandReport extends FPDF
 			return 'C';
 
 		return '';
+	}
+
+	protected function resolveBackground($param){
+		if ($param == "Transparent") {
+			return false;
+		}
+		return true;
+	}
+
+	protected function resolveAlignmentH($param){
+		return mb_strtoupper($param)[0];
 	}
 
 	protected function resolveDataTable($nameTable, $w, $h, $x, $y){
@@ -167,7 +179,7 @@ class XpandReport extends FPDF
 		foreach ($this->_objsRepeat as $component) {
 			switch ($component['name']) {
 				case 'textField':
-					
+
 					break;
 				case 'pictureBox':
 					break;
@@ -186,20 +198,30 @@ class XpandReport extends FPDF
 			switch ($name) {
 				case 'textField':
 					foreach ($com as $txt) {
-						/*$this->SetFont(
+						/*echo "<br />------------------" . $txt['prop']['text']['content'] . "-----------------";
+						echo "<br />Family: " . $txt['prop']['font']['attr']['family'];
+						echo "<br />Style: " . $this->resolveStyleText($txt['prop']['font']['attr']['style']);
+						echo "<br />Size: " . $txt['prop']['font']['attr']['size'];*/
+						$this->SetFont(
 								$txt['prop']['font']['attr']['family'],
 								$this->resolveStyleText($txt['prop']['font']['attr']['style']),
 								$txt['prop']['font']['attr']['size']
-							);*/
-						$w = $txt['attr']['width'] - ($txt['attr']['width'] * .26);
-						$h = $txt['attr']['height'] - ($txt['attr']['height'] * .26);
+							);
 						$x = $txt['attr']['x'] - ($txt['attr']['x'] * .28);
 						$y = $txt['attr']['y'] - ($txt['attr']['y'] * .2754);
-						$border = (int)$txt['prop']['border']['attr']['width'];
-						$align = $this->resolveAlignment($txt['prop']['text']['attr']['horAlignment']);
 						$this->SetXY($x, $y);
-						$this->Cell($w, $h, utf8_decode($txt['prop']['text']['content']),
-									$border, 0,	$align);
+						$this->MultiCell(
+								($txt['attr']['width'] - $txt['attr']['width'] * .28),
+								($txt['attr']['height'] - $txt['attr']['height'] * .2754),
+								utf8_decode($txt['prop']['text']['content']),
+								($txt['prop']['border']['attr']['width'] > 0),
+								$this->resolveAlignmentH(
+									$txt['prop']['text']['attr']['horAlignment']
+								),
+								$this->resolveBackground(
+									$txt['prop']['backgroundColor']['attr']['color']
+								)
+						);
 						$this->SetFont('Arial', '', 10);
 					}
 					break;
@@ -208,7 +230,7 @@ class XpandReport extends FPDF
 						$x = $imgs['attr']['x'] - ($imgs['attr']['x'] * .28);
 						$y = $imgs['attr']['y'] - ($imgs['attr']['y'] * .2754);
 						$w = $imgs['attr']['width'] - ($imgs['attr']['width'] * .28);
-						$h = $imgs['attr']['height'] - ($imgs['attr']['height'] * .28);
+						$h = $imgs['attr']['height'] - ($imgs['attr']['height'] * .2754);
 						$dynamic = ($imgs['attr']['Dynamic'] == "True");
 						if ($dynamic) {
 							// Cargar imagen de la lista de imagenes pasadas.
@@ -218,7 +240,7 @@ class XpandReport extends FPDF
 							$carpeta = 'temp';
 							if (!file_exists($carpeta))
 								mkdir($carpeta, 0777, true);
-							file_put_contents('temp/'. $imgs['attr']['Name'] .'.png', 
+							file_put_contents('temp/'. $imgs['attr']['Name'] .'.png',
 								$imgs['prop']['image']['content']);
 							$dirImg = "temp/". $imgs['attr']['Name'] .".png";
 							$this->Image($dirImg, $x, $y, $w, $h);
@@ -250,15 +272,30 @@ class XpandReport extends FPDF
 			switch ($name) {
 				case 'textField':
 					foreach ($com as $txt) {
+						$this->SetFont(
+								$txt['prop']['font']['attr']['family'],
+								$this->resolveStyleText($txt['prop']['font']['attr']['style']),
+								$txt['prop']['font']['attr']['size']
+							);
 						$x = $txt['attr']['x'] - ($txt['attr']['x'] * .28);
 						$y = $txt['attr']['y'] - ($txt['attr']['y'] * .2754);
-						// $y -= 56.7; // 56.7
 						$this->SetXY($x, $y);
-						$this->Cell($txt['attr']['width'], 
-									$txt['attr']['height'], 
-									$this->resolveParams(
-										$txt['prop']['text']['content']
-									));
+						$this->Cell(
+								($txt['attr']['width'] - $txt['attr']['width'] * .28),
+								($txt['attr']['height'] - $txt['attr']['height'] * .2754),
+								$this->resolveParams(
+									$txt['prop']['text']['content']
+								),
+								($txt['prop']['border']['attr']['width'] > 0),
+								0,
+								$this->resolveAlignmentH(
+									$txt['prop']['text']['attr']['horAlignment']
+								),
+								$this->resolveBackground(
+									$txt['prop']['backgroundColor']['attr']['color']
+									)
+						);
+						$this->SetFont('Arial', '', 10);
 					}
 					break;
 				case 'table':

@@ -5,6 +5,7 @@
 * reporte y convertirlos en entidades de PHP para reconocerlos y 
 * crear el reporte en PDF
 */
+
 class ParserXR
 {
 	// Contiene el objecto XML del reporte
